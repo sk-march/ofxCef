@@ -1,11 +1,13 @@
 ﻿#include "ofxCEFV8ExtensionHandler.h"
+#include "ofxCEFClientApp.h"
 
 #include <iostream>
 #include <string>
 
 //--------------------------------------------------------------
-ofxCEFV8ExtensionHandler::ofxCEFV8ExtensionHandler(CefRefPtr<CefApp> app){
+ofxCEFV8ExtensionHandler::ofxCEFV8ExtensionHandler(CefRefPtr<CefApp> app, CefRefPtr<CefV8Context> context){
     this->app = app;
+	this->context = context;
 }
 
 //--------------------------------------------------------------
@@ -13,7 +15,12 @@ bool ofxCEFV8ExtensionHandler::Execute(const CefString &name,
                                        CefRefPtr<CefV8Value> object,
                                        const CefV8ValueList &arguments,
                                        CefRefPtr<CefV8Value> &retval,
-                                       CefString &exception){
+                                       CefString &exception)
+{
+	ofxCEFClientApp* myapp = dynamic_cast<ofxCEFClientApp*>(app.get());
+	if (myapp == NULL) return false;
+	else return myapp->call_back->call_func(retval, object, name, arguments, context);
+
     if (name == "sendMessageToOF") {
         if (arguments.size() == 2 && arguments[0]->IsString()) {
             CefString type;

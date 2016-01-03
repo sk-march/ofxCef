@@ -17,6 +17,7 @@ public:
     bool bIsRetinaDisplay;
     
     bool bIsShuttingDown;
+	bool bIsDirty;
     
 
     void init(void);

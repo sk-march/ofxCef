@@ -7,8 +7,18 @@ ofxCEFClientApp::ofxCEFClientApp(){
 }
 
 //--------------------------------------------------------------
+void ofxCEFClientApp::OnContextCreated(
+	CefRefPtr<CefBrowser> browser,
+	CefRefPtr<CefFrame> frame,
+	CefRefPtr<CefV8Context> context)
+{
+	// add function
+	call_back->register_function(this, context);
+}
+
+//--------------------------------------------------------------
 void ofxCEFClientApp::OnWebKitInitialized(){    
-    std::string app_code =
+/*    std::string app_code =
         "var app;"
         "if (!app)"
         "    app = {};"
@@ -24,4 +34,5 @@ void ofxCEFClientApp::OnWebKitInitialized(){
         "})();;";
 
     CefRegisterExtension( "v8/app", app_code, new ofxCEFV8ExtensionHandler(this) );
+*/
 }

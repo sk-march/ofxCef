@@ -4,11 +4,29 @@
 #include "include/cef_app.h"
 #include "include/cef_client.h"
 
+struct js_callback_handler
+{
+	virtual bool call_func(CefRefPtr<CefV8Value> &retval, const CefRefPtr<CefV8Value> object,const CefString &name, const CefV8ValueList &arguments, CefRefPtr<CefV8Context> context) {
+		return false;
+	}
+	virtual void register_function(CefRefPtr<CefApp> app, CefRefPtr<CefV8Context> context) {
+	}
+};
+
 //--------------------------------------------------------------
 class ofxCEFClientApp : public CefApp, public CefRenderProcessHandler
 {
 public:
-    ofxCEFClientApp();
+	js_callback_handler def_call_back;
+	js_callback_handler* call_back;
+
+	
+	ofxCEFClientApp();
+
+	void OnContextCreated(CefRefPtr<CefBrowser> browser,
+		CefRefPtr<CefFrame> frame,
+		CefRefPtr<CefV8Context> context) OVERRIDE;
+
 
     CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE
     {
@@ -31,6 +49,8 @@ public:
         CefString frameScheduling(L"-enable-begin-frame-scheduling");
         command_line->AppendSwitch(frameScheduling);
 #endif
+		CefString systemFlash(L"--enable-system-flash");
+		command_line->AppendSwitch(systemFlash);
 
 		//CefString singleProcess(L"-single-process");
 		//command_line->AppendSwitch(singleProcess);

@@ -2,7 +2,7 @@
 #include <fstream>
 #include "ofxCEFRenderHandler.h"
 #include "ofMain.h"
-#include "ofApp.h"
+//#include "ofApp.h"
 #include "ofAppGLFWWindow.h"
 
 #if defined(TARGET_OSX)
@@ -202,14 +202,15 @@ bool ofxCEFRenderHandler::GetScreenInfo(CefRefPtr<CefBrowser> browser,
 bool ofxCEFRenderHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect){
     
     if (bIsShuttingDown) return false;
-    
+/*    
     if (bIsRetinaDisplay){
         rect = CefRect(0,0, ofGetWidth()*0.5, ofGetHeight()*0.5);
     } else {
         rect = CefRect(0,0, ofGetWidth(), ofGetHeight());
     }
-    
-    return true;
+*/    
+	rect = CefRect(0, 0, w, h);
+	return true;
 }
 
 //--------------------------------------------------------------
@@ -325,6 +326,8 @@ void ofxCEFRenderHandler::render() {
         
         glPopMatrix(); VERIFY_NO_ERROR;
         glPopAttrib(); VERIFY_NO_ERROR;
+
+		bIsDirty = false;
     }
 }
 
@@ -353,6 +356,8 @@ void ofxCEFRenderHandler::OnPaint(CefRefPtr<CefBrowser> browser,
 //    DCHECK_NE(texture_id_, 0U);
     glBindTexture(GL_TEXTURE_2D, texture_id_); VERIFY_NO_ERROR;
     
+	bIsDirty = true;
+
     if (type == PET_VIEW) {
         int old_width = view_width_;
         int old_height = view_height_;

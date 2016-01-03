@@ -19,7 +19,7 @@ public:
 
     bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                               CefProcessId source_process,
-                              CefRefPtr<CefProcessMessage> message);
+                              CefRefPtr<CefProcessMessage> message) OVERRIDE;
     
     virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
                              CefRefPtr<CefFrame> frame);
@@ -28,6 +28,8 @@ public:
     virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                            CefRefPtr<CefFrame> frame,
                            int httpStatusCode);
+
+	inline ofxCEF* GetCEF() { return _parent; }
 
 private:
     CefRefPtr<CefRenderHandler> handler;

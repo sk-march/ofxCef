@@ -1,7 +1,24 @@
 #include "cef_app.h"
 
 #include "ofxCEFBrowserClient.h"
+#include "ofxCEFClientApp.h"
 #include "ofxCEFRenderHandler.h"
+
+// use cef_binary_3.2454.1344.g2782fb8_windows32
+// @ https://cefbuilds.com/
+// download and run "cmake ."
+
+#ifdef _DEBUG
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/Debug/libcef.lib")
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/libcef_dll/Debug/libcef_dll_wrapper.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef_d.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef_dll_wrapper_d.lib")
+#else
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/Release/libcef.lib")
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/libcef_dll/Release/libcef_dll_wrapper.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef_dll_wrapper.lib")
+#endif
 
 #ifndef CEFGUI_H
 #define CEFGUI_H
@@ -25,9 +42,7 @@ public:
 };
 
 //--------------------------------------------------------------
-class ofxCEF;
-
-ofxCEF* initofxCEF(int argc, char** argv);
+void initofxCEF(int argc, char** argv, js_callback_handler* call_back);
 
 //--------------------------------------------------------------
 class ofxCEF
@@ -43,16 +58,26 @@ public:
     void draw(void);
     void reshape(int, int);
     
-    void setup();
+    void setup(uint32_t w=0, uint32_t h=0);
     
-    void mouseWheel(int, int);
-    
-    void mousePressed(ofMouseEventArgs &e);
+	void focus();
+    void mouseWheel(int v, int h);
+	void mousePressed(int code= OF_MOUSE_BUTTON_LEFT);
+	void mouseReleased(int code = OF_MOUSE_BUTTON_LEFT);
+	void mouseMoved(int x, int y);
+
+	void keyPutChar(char text);
+	void keyPutChar(wchar_t text);
+	void keyPressed(int code);
+	void keyReleased(int code);
+	void keyWinMessageLoop(UINT msg, WPARAM wParam, LPARAM lParam);
+
+	void mousePressed(ofMouseEventArgs &e);
     void mouseReleased(ofMouseEventArgs &e);
     void mouseMoved(ofMouseEventArgs &e);
     void mouseDragged(ofMouseEventArgs &e);
     
-    void keyPressed(ofKeyEventArgs &e);
+	void keyPressed(ofKeyEventArgs &e);
     void keyReleased(ofKeyEventArgs &e);
     
     void windowResized(ofResizeEventArgs &e);
@@ -78,7 +103,7 @@ public:
     CefRefPtr<CefBrowser> browser;
     CefRefPtr<ofxCEFBrowserClient> client;
 
-    ofxCEFRenderHandler* renderHandler;
+	CefRefPtr<ofxCEFRenderHandler> renderHandler;
 
 };
 
