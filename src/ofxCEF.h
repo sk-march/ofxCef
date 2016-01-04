@@ -9,15 +9,15 @@
 // download and run "cmake ."
 
 #ifdef _DEBUG
-#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/Debug/libcef.lib")
-#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/libcef_dll/Debug/libcef_dll_wrapper.lib")
-//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef_d.lib")
-//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef_dll_wrapper_d.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/Debug/libcef.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/libcef_dll/Debug/libcef_dll_wrapper.lib")
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/lib_DEBUG/libcef.lib")
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/lib_DEBUG/libcef_dll_wrapper.lib")
 #else
-#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/Release/libcef.lib")
-#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/libcef_dll/Release/libcef_dll_wrapper.lib")
-//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef.lib")
-//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/libcef_dll_wrapper.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/Release/libcef.lib")
+//#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/cef/libcef_dll/Release/libcef_dll_wrapper.lib")
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/lib_RELEASE/libcef.lib")
+#pragma comment(lib, "../../../addons/ofxCef/libs/CEF/win32/lib/lib_RELEASE/libcef_dll_wrapper.lib")
 #endif
 
 #ifndef CEFGUI_H
