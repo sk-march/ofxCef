@@ -54,6 +54,7 @@ public:
 	void exit();
 
     void load(const char*);
+	void load(const wchar_t * url);
     void update();
     void draw(void);
     void reshape(int, int);

@@ -1,3 +1,6 @@
+#this file is larger than github limit.
+libs/CEF/win32/lib/lib_Debug/libcef.dll
+
 # Some general ignore patterns
 build/
 obj/

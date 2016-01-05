@@ -235,6 +235,14 @@ void ofxCEF::load(const char* url) {
 	browser->GetMainFrame()->LoadURL(url);
 }
 
+void ofxCEF::load(const wchar_t* url) {
+	if (!renderHandler->initialized) {
+		renderHandler->init();
+	}
+
+	browser->GetMainFrame()->LoadURL(url);
+}
+
 //--------------------------------------------------------------
 void ofxCEF::update() {
 	GLint swapbytes, lsbfirst, rowlength, skiprows, skippixels, alignment;
