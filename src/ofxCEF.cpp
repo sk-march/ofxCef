@@ -63,10 +63,99 @@ HINSTANCE hInst;   // current instance
 #endif
 
 
+#include "./cefclient/browzer/main_context_impl.h"
+#include "./cefclient/browzer/main_message_loop.h"
+#include "./cefclient/browzer/main_message_loop_std.h"
+#include "./cefclient/browzer/main_message_loop_multithreaded_win.h"
+#include "./cefclient/renderer/client_app_renderer.h"
 
+CefRefPtr<ofxCEFClientApp> ofxCEF::app;
+scoped_ptr<client::MainContextImpl> context;
+scoped_ptr<client::MainMessageLoop> message_loop;
+js_callback* g_call_back;
 
-void initofxCEF(int argc, char** argv, js_callback_handler* call_back)
+bool initofxCEF(int argc, char** argv, js_callback* call_back)
 {
+#if 1
+	// Enable High-DPI support on Windows 7 or newer.
+	CefEnableHighDPISupport();
+
+#if defined(TARGET_OSX) 
+	CefMainArgs main_args(argc, argv);
+#elif defined(__linux) 
+	CefMainArgs main_args(argc, argv);
+#elif defined(TARGET_WIN32)
+	CefMainArgs main_args(::GetModuleHandle(NULL));
+#endif
+
+	void* sandbox_info = NULL;
+
+#if defined(CEF_USE_SANDBOX)
+	// Manage the life span of the sandbox information object. This is necessary
+	// for sandbox support on Windows. See cef_sandbox_win.h for complete details.
+	CefScopedSandboxInfo scoped_sandbox;
+	sandbox_info = scoped_sandbox.sandbox_info();
+#endif
+
+	// Parse command-line arguments.
+	CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+	command_line->InitFromString(::GetCommandLineW());
+
+	// Create a ClientApp of the correct type.
+	CefRefPtr<CefApp> app;
+	app = new client::ClientAppRenderer();
+	g_call_back = call_back;
+
+	// Execute the secondary process, if any.
+	int exit_code = CefExecuteProcess(main_args, app, sandbox_info);
+	if (exit_code >= 0) {
+		printf("execute cef process faild\n"); fflush(stdout);
+		return false;
+	}
+
+	// Create the main context object.
+	context.reset( new client::MainContextImpl(command_line, true) );
+
+	CefSettings settings;
+	settings.single_process = false;
+	settings.windowless_rendering_enabled = true;
+//	settings.ignore_certificate_errors = true;
+
+#if !defined(CEF_USE_SANDBOX)
+	settings.no_sandbox = true;
+#endif
+
+	// Populate the settings based on command line arguments.
+	context->PopulateSettings(&settings);
+
+	message_loop.reset(new client::MainMessageLoopMultithreadedWin());
+	// Create the main message loop object.
+//	if (settings.multi_threaded_message_loop)
+//		message_loop.reset(new client::MainMessageLoopMultithreadedWin);
+//	else
+//		message_loop.reset(new client::MainMessageLoopStd);
+
+	// Initialize CEF.
+	context->Initialize(main_args, settings, app, sandbox_info);
+
+	// Register scheme handlers.
+	//test_runner::RegisterSchemeHandlers();
+
+	// Create the first window.
+/*	context->GetRootWindowManager()->CreateRootWindow(
+		true,             // Show controls.
+		settings.windowless_rendering_enabled ? true : false,
+		CefRect(),        // Use default system size.
+		std::string());   // Use default URL.
+
+						  // Run the message loop. This will block until Quit() is called by the
+						  // RootWindowManager after all windows have been destroyed.
+//	int result = message_loop->Run();
+*/
+
+	return message_loop->RunsTasksOnCurrentThread();
+
+#else
 #if defined(TARGET_OSX) 
 	CefMainArgs main_args(argc, argv);
 #elif defined(__linux) 
@@ -76,7 +165,8 @@ void initofxCEF(int argc, char** argv, js_callback_handler* call_back)
 #endif
 
 	CefRefPtr<ofxCEFClientApp> app(new ofxCEFClientApp);
-	if(call_back==NULL) app->call_back = &app->def_call_back;
+	ofxCEF::app = app;
+	if(call_back==NULL) app->call_back = NULL;
 	else app->call_back = call_back;
 
 	int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
@@ -94,10 +184,13 @@ void initofxCEF(int argc, char** argv, js_callback_handler* call_back)
 
 	CefSettings settings;
 	settings.background_color = 0xFFFF00FF;
-	settings.single_process = true;// false;
-	settings.windowless_rendering_enabled = true;
+	settings.single_process = true;
+//	settings.multi_threaded_message_loop = 1;
+//	settings.windowless_rendering_enabled = true;	// IME broken
 	settings.command_line_args_disabled = true;
 	//settings.multi_threaded_message_loop = true;
+	settings.cache_path.str = L"./cache";
+	settings.cache_path.length= wcslen(L"./cache");
 
 	void* sandbox_info_ = NULL;// cef_sandbox_info_create();
 	CefInitialize(main_args, settings, app.get(), sandbox_info_);
@@ -115,13 +208,28 @@ void initofxCEF(int argc, char** argv, js_callback_handler* call_back)
 	#endif
 	CefRefreshWebPlugins();
 	*/
-	return;
+	return true;
+#endif
+}
+
+bool exitofxCEF()
+{
+	// Shut down CEF.
+	if(context.get()!=NULL) context->Shutdown();
+	else CefShutdown(); //called in above method;
+
+	// Release objects in reverse order of creation.
+	//	delete message_loop;
+	//	delete context;
+	message_loop.reset();
+	context.reset();
+
+	return true;
 }
 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void ofxCEF::setup(uint32_t w, uint32_t h) {
-
+void ofxCEF::setup(uint32_t w, uint32_t h, const std::vector<std::wstring>& cert_exception) {
 	CefWindowInfo windowInfo;
 	renderHandler = new ofxCEFRenderHandler();
 
@@ -169,7 +277,7 @@ void ofxCEF::setup(uint32_t w, uint32_t h) {
 	settings.windowless_frame_rate = 60;
 	settings.plugins = STATE_ENABLED;
 
-	client = new ofxCEFBrowserClient(this, renderHandler);
+	client = new ofxCEFBrowserClient(this, renderHandler, g_call_back, cert_exception);
 	browser = CefBrowserHost::CreateBrowserSync(windowInfo, client.get(), "", settings, NULL);
 
 #if defined(TARGET_OSX) 
@@ -187,18 +295,17 @@ ofxCEF::ofxCEF() {
 
 //--------------------------------------------------------------
 ofxCEF::~ofxCEF() {
-}
-
-void ofxCEF::exit() {
 	//TODO Check if we need to do some calls to OnBeforeClose 
 	disableEvents();
-	renderHandler->bIsShuttingDown = true;
-	browser->GetHost()->CloseBrowser(false);
+	if(renderHandler.get()!=NULL) renderHandler->bIsShuttingDown = true;
+	if(browser.get()!=NULL) browser->GetHost()->CloseBrowser(false);
+	browser = NULL;
+	client = NULL;
+	renderHandler = NULL;
 
 	// The following call to CefShutdown make the app crash on OS X. Still not working on Windows neither.
 	//CefShutdown();
 }
-
 
 //--------------------------------------------------------------
 void ofxCEF::enableEvents() {
@@ -479,7 +586,23 @@ void ofxCEF::mouseMoved(ofMouseEventArgs &e) {
 
 //--------------------------------------------------------------
 void ofxCEF::mouseDragged(ofMouseEventArgs &e) {
-	mouseMoved(e);
+	int x = e.x;
+	int y = e.y;
+
+	if (renderHandler->bIsRetinaDisplay) {
+		x /= 2;
+		y /= 2;
+	}
+
+	mouseX = x;
+	mouseY = y;
+
+	CefMouseEvent event;
+	event.x = x;
+	event.y = y;
+//	event.modifiers = EVENTFLAG_LEFT_MOUSE_BUTTON;
+
+	browser->GetHost()->SendMouseMoveEvent(event, false);
 }
 
 //--------------------------------------------------------------

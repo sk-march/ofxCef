@@ -42,7 +42,8 @@ public:
 };
 
 //--------------------------------------------------------------
-void initofxCEF(int argc, char** argv, js_callback_handler* call_back);
+bool initofxCEF(int argc, char** argv, js_callback* call_back);
+bool exitofxCEF();
 
 //--------------------------------------------------------------
 class ofxCEF
@@ -51,15 +52,13 @@ public:
     ofxCEF();
     ~ofxCEF();
     
-	void exit();
-
     void load(const char*);
 	void load(const wchar_t * url);
     void update();
     void draw(void);
     void reshape(int, int);
     
-    void setup(uint32_t w=0, uint32_t h=0);
+    void setup(uint32_t w, uint32_t h, const std::vector<std::wstring>& cert_exception);
     
 	void focus();
     void mouseWheel(int v, int h);
@@ -101,9 +100,9 @@ public:
  // private:
     int mouseX, mouseY;
 
-    CefRefPtr<CefBrowser> browser;
+	static CefRefPtr<ofxCEFClientApp> app;
+	CefRefPtr<CefBrowser> browser;
     CefRefPtr<ofxCEFBrowserClient> client;
-
 	CefRefPtr<ofxCEFRenderHandler> renderHandler;
 
 };
